@@ -2,13 +2,19 @@ from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from connections.linkedin import scrape_linkedin_profile
-load_dotenv()
 from agents.linkedin_agents import lookup as linkedin_lookup_agent
-from output_parsers import summary_parser
+from output_parsers import summary_parser,Summary
+from typing import Tuple
 
-def ice_break_with(name: str):
+
+load_dotenv()
+
+def ice_break_with(name: str) -> Tuple:
+    
+    
     linked_username = linkedin_lookup_agent(name=name)
-    linkedin_data = scrape_linkedin_profile(linked_profile_url=linked_username)
+    linkedin_data = scrape_linkedin_profile(linked_profile_url=linked_username,mock=True)
+    
     summary_template = """
             given the information {information} about a person from I want you to create:
             1. a short summary
@@ -29,8 +35,11 @@ def ice_break_with(name: str):
     chain = summary_prompt_template | llm | summary_parser
     
 
-    res = chain.invoke(input = {"information":linkedin_data})
-    print(res)
+    res= chain.invoke(input = {"information":linkedin_data})
+
+    print(res.to_dict())
+    
+    return res.to_dict(),linkedin_data.get("profile_pic_url")
 
 if __name__ == "__main__":
     print("Ice Break Enter")
